@@ -9,15 +9,13 @@ import java.util.Properties;
 
 public class DataIngestion {
     public static void main(String[] args) {
-        // Initialize satellite feed
         SatelliteFeed feed = new SatelliteFeed("Sentinel-2");
 
-        // Kafka producer configuration
         Properties kafkaProps = new Properties();
         kafkaProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         kafkaProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         kafkaProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
-        kafkaProps.put(ProducerConfig.ACKS_CONFIG, "all"); // Ensure message delivery
+        kafkaProps.put(ProducerConfig.ACKS_CONFIG, "all");
 
         KafkaProducer<String, byte[]> producer = new KafkaProducer<>(kafkaProps);
 
@@ -25,14 +23,12 @@ public class DataIngestion {
             while (feed.hasNextFrame()) {
                 Frame data = feed.getNextFrame();
 
-                // Create a Kafka record
                 ProducerRecord<String, byte[]> record = new ProducerRecord<>(
-                    "satellite-topic", // Kafka topic
-                    data.getId(),      // Key (frame ID)
-                    data.toBytes()     // Value (frame data as bytes)
+                    "satellite-topic",
+                    data.getId(),
+                    data.toBytes()
                 );
 
-                // Send data asynchronously and handle callback
                 producer.send(record, (RecordMetadata metadata, Exception exception) -> {
                     if (exception != null) {
                         System.err.println("Error sending frame " + data.getId() + ": " + exception.getMessage());
@@ -46,7 +42,6 @@ public class DataIngestion {
         } catch (Exception e) {
             System.err.println("Error during data ingestion: " + e.getMessage());
         } finally {
-            // Close the producer to release resources
             producer.close();
         }
     }
